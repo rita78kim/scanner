@@ -30,9 +30,9 @@
          padding:14px;margin-top:14px}
   .inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
   .field label{display:block;font-size:11px;color:var(--dim);margin-bottom:5px;font-weight:600}
-  .field input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;
+  .field input,.field select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;
     color:var(--text);font-family:var(--mono);font-size:15px;padding:9px 10px;text-align:right}
-  .field input:focus{outline:none;border-color:var(--dim)}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--dim)}
   .riskline{margin-top:10px;font-size:12px;color:var(--dim)}
   .riskline b{color:var(--text);font-family:var(--mono);font-weight:600}
 
@@ -57,14 +57,16 @@
   .sect h2{font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;
     letter-spacing:.08em;margin-bottom:10px}
 
-  /* ---- 주문표 카드 ---- */
   .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
         margin-bottom:12px;overflow:hidden}
   .card.stale{opacity:.5}
-  .chead{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid var(--line)}
+  .chead{display:flex;align-items:center;gap:8px;padding:13px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .badge{font-size:12px;font-weight:800;padding:4px 9px;border-radius:7px;letter-spacing:.03em}
   .badge.long{color:var(--long);background:var(--long-bg)}
   .badge.short{color:var(--short);background:var(--short-bg)}
+  .badge.trend{font-size:10.5px;font-weight:700}
+  .badge.trend.with{color:var(--long);background:var(--long-bg)}
+  .badge.trend.against{color:var(--warn);background:var(--warn-bg)}
   .sym{font-family:var(--mono);font-weight:700;font-size:16px}
   .age{margin-left:auto;font-size:11px;color:var(--dim);font-family:var(--mono);text-align:right;line-height:1.4}
   .age .fresh{color:var(--long);font-weight:700}
@@ -84,16 +86,32 @@
     font-size:11px;font-weight:700}
   .flag.warn{color:var(--warn);background:var(--warn-bg)}
   .flag.stale{color:var(--faint);background:var(--surface2)}
+  .flag.exit{color:var(--short);background:var(--short-bg)}
 
-  /* 돌파 임박 */
   .near{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-  .nrow{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line);
-    font-size:13px}
+  .nrow{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line);font-size:13px}
   .nrow:last-child{border-bottom:none}
-  .nrow .sym{font-size:13.5px;flex:0 0 110px}
+  .nrow .sym{font-size:13.5px;flex:0 0 100px}
   .nrow .dir{font-size:11px;font-weight:700;flex:0 0 64px}
   .nrow .dir.long{color:var(--long)} .nrow .dir.short{color:var(--short)}
   .nrow .dist{margin-left:auto;font-family:var(--mono);font-size:12.5px;color:var(--dim)}
+
+  /* 포지션 관리 */
+  .posadd{display:flex;gap:8px;margin-bottom:10px}
+  .posadd input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:9px;
+    color:var(--text);font-family:var(--mono);font-size:14px;padding:9px 10px;text-transform:uppercase}
+  .posadd select{background:var(--bg);border:1px solid var(--line);border-radius:9px;
+    color:var(--text);font-size:13px;padding:9px 8px}
+  .posadd button{background:var(--surface2);border:1px solid var(--line);border-radius:9px;
+    color:var(--text);font-size:13px;font-weight:700;padding:9px 14px;cursor:pointer}
+  .prow{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;margin-bottom:8px}
+  .prow .top{display:flex;align-items:center;gap:8px}
+  .prow .del{margin-left:auto;background:none;border:none;color:var(--faint);font-size:16px;
+    cursor:pointer;padding:2px 6px}
+  .prow .info{margin-top:8px;font-size:12px;color:var(--dim);line-height:1.6;font-family:var(--mono)}
+  .prow .info b{color:var(--text)}
+  .poshint{font-size:11.5px;color:var(--faint);line-height:1.6;margin-top:8px}
 
   .empty{padding:26px 14px;text-align:center;color:var(--dim);font-size:13.5px;line-height:1.7}
   .error{display:none;margin-top:14px;padding:13px;border-radius:12px;background:var(--short-bg);
@@ -108,7 +126,7 @@
 
   <header>
     <h1>돌파 스캐너<span class="tf">BYBIT · 4H · CH55</span></h1>
-    <div class="sub">바이비트 USDT 무기한 전 종목 스캔 · 55봉 채널 돌파 · 손절 ATR×2 · 트레일링 ATR×3</div>
+    <div class="sub">진입: 55봉 채널 돌파 · 손절: ATR×2 · 청산: 20봉 반대 채널 (백테스트 검증 완료)</div>
   </header>
 
   <div class="panel">
@@ -117,16 +135,29 @@
       <div class="field"><label>레버리지 (배)</label><input id="lev" type="number" inputmode="decimal" value="3"></div>
       <div class="field"><label>거래대금 (백만$)</label><input id="volmin" type="number" inputmode="decimal" value="10"></div>
     </div>
-    <div class="riskline">트레이드당 리스크 <b>1%</b> (숏 <b>0.7배</b>) · 진입은 신호 확인 후 규칙대로만</div>
-    <button class="scanbtn" id="btn" onclick="scan()">스캔</button>
+    <div class="riskline">트레이드당 리스크 <b>1%</b> (숏 <b>0.7배</b>) · 동시 포지션 최대 <b>3</b>개</div>
+    <button class="scanbtn" id="btn" onclick="scan()">스캔 + 포지션 점검</button>
     <div class="progress" id="prog"><div class="pbar"><div class="pfill" id="pfill"></div></div><div class="ptext" id="ptext"></div></div>
   </div>
 
   <div class="error" id="err"></div>
   <div class="summary" id="sum"></div>
 
+  <div class="sect on" id="posSect">
+    <h2>보유 포지션 관리</h2>
+    <div class="posadd">
+      <input id="posSym" placeholder="예: BEAT" autocapitalize="characters">
+      <select id="posSide"><option value="long">롱</option><option value="short">숏</option></select>
+      <button onclick="addPos()">추가</button>
+    </div>
+    <div id="posList"></div>
+    <div class="poshint">청산 규칙: 4시간봉 마감마다 스캔을 눌러 각 포지션의 "권장 스탑"을 확인하고,
+      기존 스탑보다 <b>유리한 방향일 때만</b> 거래소 SL을 그 가격으로 옮기세요 (롱은 올리기만, 숏은 내리기만).
+      "청산 신호"가 뜨면 시장가로 정리합니다.</div>
+  </div>
+
   <div class="sect" id="sigSect">
-    <h2>신호</h2>
+    <h2>신규 진입 신호</h2>
     <div id="sigList"></div>
   </div>
 
@@ -136,8 +167,8 @@
   </div>
 
   <footer>
-    규칙: 지나간 신호(돌파 2캔들 경과 또는 현재가가 돌파 종가에서 1 ATR 초과 이탈)는 진입하지
-    않는다 · 숏 펀딩비 −0.05%/8h 이하이면 스킵 · 손절·트레일링은 진입과 동시에 거래소에 등록한다 ·
+    규칙: 지나간 신호는 진입하지 않는다 · 숏 펀딩비 −0.05%/8h 이하이면 스킵 · SL은 진입과
+    동시에 등록한다 · 추세 배지(200봉 이평)는 참고용이며 차단 여부는 백테스트 확정 후 적용 ·
     이 도구는 신호 표시기일 뿐이며 수익을 보장하지 않는다.
   </footer>
 </div>
@@ -147,22 +178,26 @@
 // ===================== 설정 =====================
 const CFG = {
   ENTRY_CH: 55,        // 진입 채널 (봉)
+  EXIT_CH: 20,         // 청산 채널 (봉) - 백테스트 확정
   ATR_P: 14,           // ATR 기간
-  SL_ATR: 2.0,         // 손절 = ATR x 2
-  TRAIL_ATR: 3.0,      // 트레일링 = ATR x 3 (콜백%로 환산)
-  TP_R: 2.0,           // 고정 익절 = 손절 거리의 2배 (2R)
+  SL_ATR: 2.0,         // 초기 손절 = ATR x 2
+  SMA_TREND: 200,      // 추세 배지 기준 이평 (참고용)
   RISK: 0.01,          // 트레이드당 리스크 1%
   SHORT_MULT: 0.7,     // 숏 크기 축소
-  FUND_LIMIT: -0.0005, // 숏 펀딩 필터: -0.05%/8h 이하이면 경고
+  FUND_LIMIT: -0.0005, // 숏 펀딩 필터
   FRESH_ATR: 1.0,      // 신선도: 현재가가 돌파 종가에서 1 ATR 이내
-  NEAR_ATR: 0.5,       // 돌파 임박: 채널까지 0.5 ATR 이내
-  BATCH: 8,            // 동시 요청 수
-  KLIMIT: 120          // 캔들 개수
+  NEAR_ATR: 0.5,       // 돌파 임박 기준
+  BATCH: 8,
+  KLIMIT: 280,         // 200봉 이평 계산을 위해 확대
+  EXCLUDE: ["SOXL","XAU","XAG","CL","MU","SNDK","SKHYNIX","SKHY","SPCX",
+            "TSLA","NVDA","AAPL","MSFT","GOOG","AMZN","META","COIN",
+            "MSTR","HOOD","PLTR","AMD","INTC","SPX","NDX","QQQ","SPY",
+            "GLD","WTI","BRENT","NG","GOLD","SILVER"]
 };
 const API = "https://api.bybit.com";
 const $ = id => document.getElementById(id);
 
-function fmt(n, ref){ // 가격 자릿수: 값 크기에 맞춰
+function fmt(n, ref){
   if(!isFinite(n)) return "-";
   const a = Math.abs(ref ?? n);
   const d = a>=1000?1: a>=100?2: a>=1?4: a>=0.01?6: 8;
@@ -178,94 +213,154 @@ async function getJSON(url){
   return j.result;
 }
 
-function atr14(c, endIdx){ // c: 오래된->최신, endIdx 포함 최근 ATR_P개 TR 평균
-  let s = 0, n = 0;
-  for(let i = endIdx; i > endIdx - CFG.ATR_P && i > 0; i--){
-    const h=c[i].h, l=c[i].l, pc=c[i-1].c;
-    s += Math.max(h-l, Math.abs(h-pc), Math.abs(l-pc)); n++;
+// ---------- 포지션 저장 (기기 로컬) ----------
+function loadPos(){ try{ return JSON.parse(localStorage.getItem("positions")||"[]"); }catch(e){ return []; } }
+function savePos(p){ try{ localStorage.setItem("positions",JSON.stringify(p)); }catch(e){} }
+let positions = loadPos();
+let lastData = {};   // 심볼 -> 분석 결과 캐시 (포지션 점검용)
+
+function addPos(){
+  const sym = $("posSym").value.trim().toUpperCase().replace(/USDT$/,"");
+  if(!sym) return;
+  const side = $("posSide").value;
+  if(!positions.find(p=>p.sym===sym)){
+    positions.push({sym, side});
+    savePos(positions);
   }
-  return n ? s/n : NaN;
+  $("posSym").value="";
+  renderPos();
+}
+function delPos(sym){
+  positions = positions.filter(p=>p.sym!==sym);
+  savePos(positions); renderPos();
+}
+
+function renderPos(){
+  const el = $("posList");
+  if(!positions.length){
+    el.innerHTML = `<div class="prow"><div class="empty" style="padding:8px">보유 포지션을 등록하면 스캔 시 권장 스탑을 계산해줍니다.</div></div>`;
+    return;
+  }
+  el.innerHTML = positions.map(p=>{
+    const d = lastData[p.sym+"USDT"];
+    let info = `<span style="color:var(--faint)">스캔을 누르면 권장 스탑이 계산됩니다</span>`;
+    let flag = "";
+    if(d){
+      const isL = p.side==="long";
+      const stopLv = isL ? d.exitLow : d.exitHigh;   // 20봉 반대 채널
+      const exited = isL ? d.last <= d.exitLow : d.last >= d.exitHigh;
+      info = `현재가 <b>${fmt(d.last)}</b> · 권장 스탑 <b>${fmt(stopLv,d.last)}</b> <span style="color:var(--faint)">(20봉 ${isL?"최저":"최고"})</span>`;
+      if(exited) flag = `<span class="flag exit">청산 신호 — 채널 이탈, 시장가 정리</span>`;
+      else if(isL && d.last < d.sma200) flag = `<span class="flag warn">참고: 200이평 아래로 내려옴</span>`;
+      else if(!isL && d.last > d.sma200) flag = `<span class="flag warn">참고: 200이평 위로 올라옴</span>`;
+    }
+    return `<div class="prow">
+      <div class="top">
+        <span class="badge ${p.side}">${p.side==="long"?"롱":"숏"}</span>
+        <span class="sym">${p.sym}</span>
+        <button class="del" onclick="delPos('${p.sym}')" aria-label="삭제">✕</button>
+      </div>
+      <div class="info">${info}${flag?"<br>"+flag:""}</div>
+    </div>`;
+  }).join("");
+}
+
+function atr14(c, endIdx){
+  let s=0,n=0;
+  for(let i=endIdx;i>endIdx-CFG.ATR_P && i>0;i--){
+    const h=c[i].h,l=c[i].l,pc=c[i-1].c;
+    s+=Math.max(h-l,Math.abs(h-pc),Math.abs(l-pc)); n++;
+  }
+  return n?s/n:NaN;
 }
 
 function analyze(sym, kl, tick){
-  // kl: bybit 응답(최신 먼저) -> 오래된 순으로
   const rows = kl.slice().reverse().map(r=>({t:+r[0],o:+r[1],h:+r[2],l:+r[3],c:+r[4]}));
   if(rows.length < CFG.ENTRY_CH + CFG.ATR_P + 3) return null;
-  const closed = rows.slice(0, -1);          // 마지막(진행 중) 캔들 제외
-  const i0 = closed.length - 1;              // 최근 마감 캔들 C0
+  const closed = rows.slice(0,-1);
+  const i0 = closed.length-1;
   const C0 = closed[i0], C1 = closed[i0-1];
 
-  const win = (endEx) => {                   // endEx 이전 ENTRY_CH봉의 채널
-    let hi=-Infinity, lo=Infinity;
-    for(let i=endEx-CFG.ENTRY_CH;i<endEx;i++){ if(closed[i].h>hi)hi=closed[i].h; if(closed[i].l<lo)lo=closed[i].l; }
+  const win = (endEx,len)=>{
+    let hi=-Infinity,lo=Infinity;
+    for(let i=Math.max(0,endEx-len);i<endEx;i++){
+      if(closed[i].h>hi)hi=closed[i].h; if(closed[i].l<lo)lo=closed[i].l;
+    }
     return {hi,lo};
   };
-  const ch0 = win(i0);        // C0 진입 판정용 (C0 제외 직전 55봉)
-  const ch1 = win(i0-1);      // C1 판정용 (첫 돌파 여부 확인)
-  const atr = atr14(closed, i0);
-  if(!isFinite(atr) || atr<=0) return null;
+  const ch0 = win(i0,CFG.ENTRY_CH);
+  const ch1 = win(i0-1,CFG.ENTRY_CH);
+  const ex  = win(closed.length,CFG.EXIT_CH);   // 최근 마감 20봉 (포지션 청산선)
+  const atr = atr14(closed,i0);
+  if(!isFinite(atr)||atr<=0) return null;
+
+  // 200봉 SMA (데이터 부족하면 NaN)
+  let sma200 = NaN;
+  if(closed.length >= CFG.SMA_TREND){
+    let s=0; for(let i=closed.length-CFG.SMA_TREND;i<closed.length;i++) s+=closed[i].c;
+    sma200 = s/CFG.SMA_TREND;
+  }
 
   const last = +tick.lastPrice;
   const fund = parseFloat(tick.fundingRate ?? "0");
+  const out = {sym,last,atr,fund,sma200,exitLow:ex.lo,exitHigh:ex.hi,closeT:C0.t+4*3600*1000};
 
   let side=null;
   if(C0.c > ch0.hi) side="long";
   else if(C0.c < ch0.lo) side="short";
 
-  const out = {sym, last, atr, fund, closeT:C0.t + 4*3600*1000};
-
   if(side){
-    const firstBreak = side==="long" ? !(C1.c > ch1.hi) : !(C1.c < ch1.lo);
-    const drift = Math.abs(last - C0.c) / atr;
-    out.side = side;
-    out.level = side==="long" ? ch0.hi : ch0.lo;
-    out.fresh = firstBreak && drift <= CFG.FRESH_ATR;
-    out.staleWhy = !firstBreak ? "돌파 후 2캔들 이상 경과" : (drift>CFG.FRESH_ATR ? "현재가가 돌파 종가에서 1 ATR 초과 이탈" : "");
-    out.fundWarn = side==="short" && fund <= CFG.FUND_LIMIT;
+    const firstBreak = side==="long" ? !(C1.c>ch1.hi) : !(C1.c<ch1.lo);
+    const drift = Math.abs(last-C0.c)/atr;
+    out.side=side;
+    out.level = side==="long"?ch0.hi:ch0.lo;
+    out.fresh = firstBreak && drift<=CFG.FRESH_ATR;
+    out.staleWhy = !firstBreak?"돌파 후 2캔들 이상 경과":(drift>CFG.FRESH_ATR?"현재가가 돌파 종가에서 1 ATR 초과 이탈":"");
+    out.fundWarn = side==="short" && fund<=CFG.FUND_LIMIT;
+    out.withTrend = isFinite(sma200) ? (side==="long" ? last>sma200 : last<sma200) : null;
     return out;
   }
-  // 돌파 임박 체크
-  const dUp = (ch0.hi - last)/atr, dDn = (last - ch0.lo)/atr;
-  if(dUp>0 && dUp<=CFG.NEAR_ATR){ out.near="long"; out.dist=dUp; out.level=ch0.hi; return out; }
-  if(dDn>0 && dDn<=CFG.NEAR_ATR){ out.near="short"; out.dist=dDn; out.level=ch0.lo; return out; }
-  return null;
+  const dUp=(ch0.hi-last)/atr, dDn=(last-ch0.lo)/atr;
+  if(dUp>0&&dUp<=CFG.NEAR_ATR){ out.near="long"; out.dist=dUp; out.level=ch0.hi; return out; }
+  if(dDn>0&&dDn<=CFG.NEAR_ATR){ out.near="short"; out.dist=dDn; out.level=ch0.lo; return out; }
+  return out.sym && positions.find(p=>p.sym+"USDT"===sym) ? out : null; // 보유 종목이면 신호 없어도 반환
 }
 
 function ticket(s, seed, lev){
   const isL = s.side==="long";
-  const entry = s.last;                                  // 진입 = 현재가 (시장가)
-  const sl    = isL ? entry - CFG.SL_ATR*s.atr : entry + CFG.SL_ATR*s.atr;
+  const entry = s.last;
+  const sl = isL ? entry-CFG.SL_ATR*s.atr : entry+CFG.SL_ATR*s.atr;
   const slPct = Math.abs(entry-sl)/entry;
-  const trail = CFG.TRAIL_ATR*s.atr/entry;               // 콜백 비율
-  const slDist = Math.abs(entry-sl);
-  const tp    = isL ? entry + CFG.TP_R*slDist : entry - CFG.TP_R*slDist; // 고정 TP (2R)
-  const tpPct = Math.abs(tp-entry)/entry;
+  const exitLv = isL ? s.exitLow : s.exitHigh;   // 현재 청산선 (참고)
   let risk = seed*CFG.RISK; if(!isL) risk*=CFG.SHORT_MULT;
-  const qty   = risk/Math.abs(entry-sl);
-  const noti  = qty*entry;
-  const marg  = noti/Math.max(lev,1);
-  const mins  = Math.max(0, Math.round((Date.now()-s.closeT)/60000));
-  const ageTx = mins<60 ? mins+"분 전 마감" : (mins/60).toFixed(1)+"시간 전 마감";
+  const qty = risk/Math.abs(entry-sl);
+  const noti = qty*entry;
+  const marg = noti/Math.max(lev,1);
+  const mins = Math.max(0,Math.round((Date.now()-s.closeT)/60000));
+  const ageTx = mins<60?mins+"분 전 마감":(mins/60).toFixed(1)+"시간 전 마감";
+  const trendBadge = s.withTrend===null?"":
+    s.withTrend?`<span class="badge trend with">추세 일치</span>`
+               :`<span class="badge trend against">추세 역행</span>`;
 
   return `
   <div class="card ${s.fresh?"":"stale"}">
     <div class="chead">
       <span class="badge ${s.side}">${isL?"롱":"숏"}</span>
       <span class="sym">${s.sym.replace("USDT","")}<small style="color:var(--faint);font-size:11px">USDT</small></span>
+      ${trendBadge}
       <span class="age">${s.fresh?'<span class="fresh">진입 가능</span>':'<span class="old">지나감</span>'}<br>${ageTx}</span>
     </div>
     <div class="ticket">
       <div class="cell"><div class="k">진입가 (시장가)</div><div class="v ${s.side}">${fmt(entry)}</div></div>
-      <div class="cell"><div class="k">손절가 · SL <small>(ATR×2)</small></div><div class="v">${fmt(sl,entry)}<small>−${pct(slPct)}</small></div></div>
-      <div class="cell"><div class="k">익절가 · TP <small>(2R)</small></div><div class="v">${fmt(tp,entry)}<small>+${pct(tpPct)}</small></div></div>
-      <div class="cell"><div class="k">트레일링 <small>(ATR×3, 체결 후 포지션 탭에서)</small></div><div class="v">${pct(trail)}<small>거리 ${fmt(CFG.TRAIL_ATR*s.atr,entry)}</small></div></div>
-      <div class="cell"><div class="k">리스크</div><div class="v">${risk.toFixed(2)}<small>USDT</small></div></div>
+      <div class="cell"><div class="k">초기 손절 · SL <small>(ATR×2)</small></div><div class="v">${fmt(sl,entry)}<small>−${pct(slPct)}</small></div></div>
       <div class="cell"><div class="k">수량</div><div class="v">${fmt(qty)}<small>${s.sym.replace("USDT","")}</small></div></div>
+      <div class="cell"><div class="k">리스크</div><div class="v">${risk.toFixed(2)}<small>USDT</small></div></div>
       <div class="cell"><div class="k">포지션 · 증거금</div><div class="v">${noti.toFixed(1)}<small>/ ${marg.toFixed(1)} USDT · ${lev}x</small></div></div>
-      <div class="cell"><div class="k">청산 방식</div><div class="v" style="font-size:12px;line-height:1.5;font-family:var(--sans);font-weight:500;color:var(--dim)">TP 또는 트레일링<br>둘 중 하나만 등록</div></div>
+      <div class="cell"><div class="k">현재 청산선 <small>(20봉 반대 채널)</small></div><div class="v">${fmt(exitLv,entry)}</div></div>
     </div>
     <div class="cfoot">
       돌파 기준선 <b>${fmt(s.level,entry)}</b> · 펀딩비 <b>${(s.fund*100).toFixed(4)}%</b>/8h
+      · 진입 후 이 종목을 위 <b>보유 포지션</b>에 등록하세요
       ${s.fundWarn?'<br><span class="flag warn">숏 펀딩비 불리 — 규칙상 스킵</span>':""}
       ${!s.fresh?'<br><span class="flag stale">'+s.staleWhy+' — 진입 금지</span>':""}
     </div>
@@ -288,30 +383,39 @@ async function scan(){
   try{
     const tk = await getJSON(API+"/v5/market/tickers?category=linear");
     const all = tk.list.filter(t=>t.symbol.endsWith("USDT"));
-    const pool = all.filter(t=>parseFloat(t.turnover24h)>=volMin)
-                    .sort((a,b)=>parseFloat(b.turnover24h)-parseFloat(a.turnover24h));
-    $("ptext").textContent=`전체 ${all.length}종목 중 유동성 통과 ${pool.length}종목 · 캔들 분석 중…`;
+    const posSyms = positions.map(p=>p.sym+"USDT");
+    const pool = all.filter(t=>{
+      const base = t.symbol.replace(/USDT$/,"");
+      if(CFG.EXCLUDE.includes(base)) return false;
+      return parseFloat(t.turnover24h)>=volMin || posSyms.includes(t.symbol);
+    }).sort((a,b)=>parseFloat(b.turnover24h)-parseFloat(a.turnover24h));
+    $("ptext").textContent=`전체 ${all.length}종목 중 분석 대상 ${pool.length}종목…`;
 
     const signals=[], nears=[]; let done=0;
+    lastData = {};
     for(let i=0;i<pool.length;i+=CFG.BATCH){
       const batch=pool.slice(i,i+CFG.BATCH);
       await Promise.all(batch.map(async t=>{
         try{
           const k=await getJSON(API+`/v5/market/kline?category=linear&symbol=${t.symbol}&interval=240&limit=${CFG.KLIMIT}`);
           const r=analyze(t.symbol,k.list,t);
-          if(r){ if(r.side) signals.push(r); else if(r.near) nears.push(r); }
-        }catch(e){ /* 개별 종목 실패는 건너뜀 */ }
+          if(r){
+            lastData[t.symbol]=r;
+            if(r.side) signals.push(r); else if(r.near) nears.push(r);
+          }
+        }catch(e){}
         done++;
       }));
       $("pfill").style.width=Math.round(done/pool.length*100)+"%";
       $("ptext").textContent=`분석 ${done}/${pool.length}`;
     }
 
-    // 렌더
     signals.sort((a,b)=>(b.fresh-a.fresh)||(a.closeT<b.closeT?1:-1));
     const freshN=signals.filter(s=>s.fresh).length;
-    $("sum").innerHTML=`전체 <b>${all.length}</b>종목 → 유동성 통과 <b>${pool.length}</b> → 신호 <b>${signals.length}</b> (진입 가능 <b>${freshN}</b>) · ${new Date().toLocaleString("ko-KR",{hour12:false})}`;
+    $("sum").innerHTML=`전체 <b>${all.length}</b>종목 → 분석 <b>${pool.length}</b> → 신호 <b>${signals.length}</b> (진입 가능 <b>${freshN}</b>) · ${new Date().toLocaleString("ko-KR",{hour12:false})}`;
     $("sum").className="summary on";
+
+    renderPos();  // 포지션 권장 스탑 갱신
 
     $("sigList").innerHTML = signals.length
       ? signals.map(s=>ticket(s,seed,lev)).join("")
@@ -331,8 +435,10 @@ async function scan(){
     $("err").className="error on";
   }
   $("prog").className="progress";
-  btn.disabled=false; btn.textContent="스캔"; running=false;
+  btn.disabled=false; btn.textContent="스캔 + 포지션 점검"; running=false;
 }
+
+renderPos();
 </script>
 </body>
 </html>
