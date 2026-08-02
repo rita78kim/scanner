@@ -131,8 +131,8 @@
 
   <div class="panel">
     <div class="inputs">
-      <div class="field"><label>시드 (USDT)</label><input id="seed" type="number" inputmode="decimal" value="350"></div>
-      <div class="field"><label>레버리지 (배)</label><input id="lev" type="number" inputmode="decimal" value="3"></div>
+      <div class="field"><label>시드 (USDT)</label><input id="seed" type="number" inputmode="decimal" placeholder="현재 잔고"></div>
+      <div class="field"><label>레버리지 (배)</label><input id="lev" type="number" inputmode="decimal" value="10"></div>
     </div>
     <div class="riskline">트레이드당 리스크 <b>0.5%</b> (숏 <b>0.7배</b>) · 동시 포지션 최대 <b>3</b>개 · 6개월 규칙 준수 트랙레코드 후 1% 복원</div>
     <button class="scanbtn" id="btn" onclick="scan()">스캔 + 포지션 점검</button>
@@ -436,4 +436,4 @@ async function scan(){
     $("err").innerHTML=`데이터를 불러오지 못했습니다.<br>· 인터넷 연결을 확인하세요<br>· 바이비트 API 점검 중이거나 지역 차단일 수 있습니다 (VPN 환경에서 재시도)<br><span style="font-family:var(--mono);font-size:11px;color:var(--dim)">${e.message}</span>`;
     $("err").className="error on";
   }
-  $("prog").className="progress";
+  $("prog").className="p
