@@ -28,7 +28,7 @@
 
   .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;
          padding:14px;margin-top:14px}
-  .inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .field label{display:block;font-size:11px;color:var(--dim);margin-bottom:5px;font-weight:600}
   .field input,.field select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;
     color:var(--text);font-family:var(--mono);font-size:15px;padding:9px 10px;text-align:right}
@@ -126,16 +126,15 @@
 
   <header>
     <h1>돌파 스캐너<span class="tf">BYBIT · 4H · CH55</span></h1>
-    <div class="sub">진입: 55봉 채널 돌파 · 손절: ATR×2 · 청산: 20봉 반대 채널 (백테스트 검증 완료)</div>
+    <div class="sub">검증 풀 15종목 고정 · 진입: 55봉 채널 돌파 · 손절: ATR×2 · 청산: 20봉 반대 채널 (2년 전체 재검증: +44.9%, PF 1.12, MDD −39.8%)</div>
   </header>
 
   <div class="panel">
     <div class="inputs">
       <div class="field"><label>시드 (USDT)</label><input id="seed" type="number" inputmode="decimal" value="350"></div>
       <div class="field"><label>레버리지 (배)</label><input id="lev" type="number" inputmode="decimal" value="3"></div>
-      <div class="field"><label>거래대금 (백만$)</label><input id="volmin" type="number" inputmode="decimal" value="10"></div>
     </div>
-    <div class="riskline">트레이드당 리스크 <b>1%</b> (숏 <b>0.7배</b>) · 동시 포지션 최대 <b>3</b>개</div>
+    <div class="riskline">트레이드당 리스크 <b>0.5%</b> (숏 <b>0.7배</b>) · 동시 포지션 최대 <b>3</b>개 · 6개월 규칙 준수 트랙레코드 후 1% 복원</div>
     <button class="scanbtn" id="btn" onclick="scan()">스캔 + 포지션 점검</button>
     <div class="progress" id="prog"><div class="pbar"><div class="pfill" id="pfill"></div></div><div class="ptext" id="ptext"></div></div>
   </div>
@@ -182,13 +181,16 @@ const CFG = {
   ATR_P: 14,           // ATR 기간
   SL_ATR: 2.0,         // 초기 손절 = ATR x 2
   SMA_TREND: 200,      // 추세 배지 기준 이평 (참고용)
-  RISK: 0.01,          // 트레이드당 리스크 1%
+  RISK: 0.005,         // 재개 단계 리스크 0.5% (6개월 트랙레코드 후 1%)
   SHORT_MULT: 0.7,     // 숏 크기 축소
   FUND_LIMIT: -0.0005, // 숏 펀딩 필터
   FRESH_ATR: 1.0,      // 신선도: 현재가가 돌파 종가에서 1 ATR 이내
   NEAR_ATR: 0.5,       // 돌파 임박 기준
   BATCH: 8,
   KLIMIT: 280,         // 200봉 이평 계산을 위해 확대
+  // 백테스트로 검증된 종목 풀 (2년 전체 존재, 생존 편향 제거). 이 15개만 스캔.
+  SYMBOLS: ["BTC","ETH","SOL","XRP","DOGE","ADA","BNB","LINK","AVAX","LTC",
+            "1000RATS","ZEC","1000PEPE","ENA","NEAR"],
   EXCLUDE: ["SOXL","XAU","XAG","CL","MU","SNDK","SKHYNIX","SKHY","SPCX",
             "TSLA","NVDA","AAPL","MSFT","GOOG","AMZN","META","COIN",
             "MSTR","HOOD","PLTR","AMD","INTC","SPX","NDX","QQQ","SPY",
@@ -378,16 +380,16 @@ async function scan(){
 
   const seed=parseFloat($("seed").value)||350;
   const lev =parseFloat($("lev").value)||3;
-  const volMin=(parseFloat($("volmin").value)||10)*1e6;
 
   try{
     const tk = await getJSON(API+"/v5/market/tickers?category=linear");
     const all = tk.list.filter(t=>t.symbol.endsWith("USDT"));
     const posSyms = positions.map(p=>p.sym+"USDT");
+    const fixed = CFG.SYMBOLS.map(b=>b+"USDT");
     const pool = all.filter(t=>{
       const base = t.symbol.replace(/USDT$/,"");
       if(CFG.EXCLUDE.includes(base)) return false;
-      return parseFloat(t.turnover24h)>=volMin || posSyms.includes(t.symbol);
+      return fixed.includes(t.symbol) || posSyms.includes(t.symbol);
     }).sort((a,b)=>parseFloat(b.turnover24h)-parseFloat(a.turnover24h));
     $("ptext").textContent=`전체 ${all.length}종목 중 분석 대상 ${pool.length}종목…`;
 
@@ -412,7 +414,7 @@ async function scan(){
 
     signals.sort((a,b)=>(b.fresh-a.fresh)||(a.closeT<b.closeT?1:-1));
     const freshN=signals.filter(s=>s.fresh).length;
-    $("sum").innerHTML=`전체 <b>${all.length}</b>종목 → 분석 <b>${pool.length}</b> → 신호 <b>${signals.length}</b> (진입 가능 <b>${freshN}</b>) · ${new Date().toLocaleString("ko-KR",{hour12:false})}`;
+    $("sum").innerHTML=`검증 풀 <b>${pool.length}</b>종목 스캔 → 신호 <b>${signals.length}</b> (진입 가능 <b>${freshN}</b>) · ${new Date().toLocaleString("ko-KR",{hour12:false})}`;
     $("sum").className="summary on";
 
     renderPos();  // 포지션 권장 스탑 갱신
@@ -435,10 +437,3 @@ async function scan(){
     $("err").className="error on";
   }
   $("prog").className="progress";
-  btn.disabled=false; btn.textContent="스캔 + 포지션 점검"; running=false;
-}
-
-renderPos();
-</script>
-</body>
-</html>
