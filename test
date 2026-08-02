@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>버튼 테스트</title>
+<style>
+  body{background:#101418;color:#fff;font-family:sans-serif;padding:30px;text-align:center}
+  button{padding:20px 30px;font-size:18px;border-radius:12px;border:none;background:#fff;color:#000;margin-top:20px}
+  #out{margin-top:30px;font-size:20px;min-height:100px}
+</style>
+</head>
+<body>
+  <h2>버튼 테스트 페이지</h2>
+  <p>아래 버튼을 눌러보세요</p>
+  <button id="btn1" onclick="test1()">테스트 1: 즉시 반응</button>
+  <br>
+  <button id="btn2" onclick="test2()">테스트 2: 인터넷 요청</button>
+  <div id="out">여기에 결과가 나옵니다</div>
+
+<script>
+"use strict";
+function test1(){
+  document.getElementById("out").textContent = "✅ 버튼 클릭 인식됨! 시각: " + new Date().toLocaleTimeString("ko-KR");
+}
+async function test2(){
+  const out = document.getElementById("out");
+  out.textContent = "요청 보내는 중...";
+  try{
+    const r = await fetch("https://api.bybit.com/v5/market/time");
+    const j = await r.json();
+    out.textContent = "✅ 바이비트 응답 성공! " + JSON.stringify(j.result);
+  }catch(e){
+    out.textContent = "❌ 요청 실패: " + e.message;
+  }
+}
+</script>
+</body>
+</html>
